@@ -28,42 +28,24 @@
 
     .days-container {
       display: flex;
-      gap: 20px;
+      flex-direction: column;
+      gap: 30px;
       padding: 0 20px 40px;
       max-width: 1200px;
       margin: 0 auto;
-      flex-wrap: wrap;
     }
 
     .day-block {
       background: rgba(255, 255, 255, 0.8);
       border-radius: 15px;
       padding: 20px;
-      width: 150px;
-      text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .day-block:hover {
-      transform: scale(1.05);
     }
 
     .day-title {
       font-size: 1.5em;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       color: #444;
-    }
-
-    .day-condition {
-      font-size: 1.2em;
-      color: #555;
-    }
-
-    .temp-range {
-      font-size: 1em;
-      color: #333;
     }
 
     .hourly-cards {
@@ -124,17 +106,33 @@
         font-size: 2em;
       }
     }
+
+    /* Stil pentru dropdown */
+    .day-select {
+      font-size: 1.2em;
+      padding: 10px;
+      margin: 20px 0;
+      width: 200px;
+      border-radius: 8px;
+      border: none;
+      background-color: #fff;
+      color: #333;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>☀️ Vremea în Pașcani</h1>
     <p>Prognoză detaliată pe 5 zile (actualizată automat)</p>
+    <!-- Selector de zile -->
+    <select class="day-select" id="daySelect">
+      <option value="0">Alege o zi</option>
+    </select>
   </header>
 
   <div class="days-container" id="weather">Se încarcă...</div>
-
-  <div class="day-detail-container" id="dayDetail"></div>
 
   <script>
     const API_KEY = "d80538f843msh4a2aa2658cf11dbp13ac68jsnb66a616cff22";
@@ -171,66 +169,64 @@
 
       const forecastDays = data.forecast.forecastday;
 
+      // Populăm selectorul de zile
+      const daySelect = document.getElementById('daySelect');
       forecastDays.forEach((day, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = day.date;
+        daySelect.appendChild(option);
+      });
+
+      // Functie pentru a actualiza prognoza pe baza zilei alese
+      function updateForecast(dayIndex) {
+        const day = forecastDays[dayIndex];
+        const date = day.date;
+        const hours = day.hour;
         const dayBlock = document.createElement("div");
         dayBlock.classList.add("day-block");
-        dayBlock.setAttribute('data-day-index', index);  // Folosim indexul pentru a identifica ziua
-        dayBlock.innerHTML = `
-          <div class="day-title">${day.date}</div>
-          <div class="day-condition">${weatherTranslations[day.day.condition.text] || day.day.condition.text}</div>
-          <div class="temp-range">Max: ${day.day.maxtemp_c}°C, Min: ${day.day.mintemp_c}°C</div>
-        `;
 
-        dayBlock.addEventListener('click', function() {
-          showDayDetail(index);  // La click, afișăm detalii pentru ziua aleasă
-        });
+        const dayTitle = document.createElement("div");
+        dayTitle.classList.add("day-title");
+        dayTitle.textContent = `${date}`;
+        dayBlock.appendChild(dayTitle);
 
-        container.appendChild(dayBlock);
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById('weather').innerText = "Eroare la încărcarea datelor meteo.";
-    });
+        const hourlyCards = document.createElement("div");
+        hourlyCards.classList.add("hourly-cards");
 
-    // Funcție pentru a afișa detaliile zilei selectate
-    function showDayDetail(dayIndex) {
-      const forecastDays = document.querySelectorAll('.day-block');
-      const selectedDay = forecastDays[dayIndex];
+        hours.forEach(hour => {
+          const time = hour.time.split(" ")[1];
+          const temp = hour.temp_c;
+          let condition = hour.condition.text;
+          const wind = hour.wind_kph;
 
-      const dayDetailContainer = document.getElementById('dayDetail');
-      const day = selectedDay.getAttribute('data-day-index');
+          // Traducem condițiile meteo în limba română
+          condition = weatherTranslations[condition] || condition; // Dacă nu există traducere, lăsăm în engleză
 
-      const hours = forecastDays[day].forecastDay.hour;  // Detalii pe ore pentru ziua selectată
-      let dayDetailHTML = `
-        <h2>Detalii ziua: ${selectedDay.querySelector('.day-title').textContent}</h2>
-        <div class="hourly-cards">
-      `;
+          // Verificăm ora pentru a schimba icoana soarelui/lunii
+          const hourValue = parseInt(time.split(":")[0]);
+          const isDaytime = hourValue >= 6 && hourValue <= 18; // Soare doar între 6:00 și 18:00
+          const isClearNight = !hour.condition.text.includes("noros"); // Dacă nu este noros, afisează o stea
 
-      hours.forEach(hour => {
-        const time = hour.time.split(" ")[1];
-        const temp = hour.temp_c;
-        let condition = hour.condition.text;
-        const wind = hour.wind_kph;
+          const card = document.createElement("div");
+          card.classList.add("hour-card");
 
-        // Traducem condițiile meteo în limba română
-        condition = weatherTranslations[condition] || condition;
+          let icon = '';
 
-        const card = `
-          <div class="hour-card">
-            <strong>${time}</strong>
-            <p>${condition}</p>
-            <p>🌡️ ${temp}°C</p>
-            <p>💨 ${wind} km/h</p>
-          </div>
-        `;
-
-        dayDetailHTML += card;
-      });
-
-      dayDetailHTML += '</div>';
-      dayDetailContainer.innerHTML = dayDetailHTML;
-    }
-  </script>
-</body>
-</html>
+          if (isDaytime) {
+            if (condition.includes("Senin")) {
+              icon = '<div class="sun-icon">😎</div>';  // Soare cu ochelari de soare
+            } else {
+              icon = '<div class="sun-icon">☀️</div>';  // Soare normal
+            }
+          } else {
+            if (isClearNight) {
+              icon = '<div class="star-icon">⭐</div>'; // Stea
+            } else {
+              icon = '<div class="moon-icon">🌙</div>'; // Lună
+            }
+          }
+          
+          card.innerHTML = `
+            ${icon}
+            
