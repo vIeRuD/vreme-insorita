@@ -3,139 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vremea în Pașcani - Detaliat</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <title>Vremea în Pașcani</title>
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(to right, #e0c3fc, #8ec5fc);
+      font-family: Arial, sans-serif;
+      background: #e0f7fa;
       margin: 0;
-      padding: 0;
-      color: #333;
-    }
-
-    header {
-      text-align: center;
-      padding: 30px 15px 10px;
-      color: #fff;
-      text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      padding: 20px;
     }
 
     h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #00796b;
     }
 
     .days-container {
       display: flex;
-      flex-direction: column;
-      gap: 30px;
-      padding: 0 20px 40px;
-      max-width: 1200px;
-      margin: 0 auto;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
     }
 
     .day-block {
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .day-title {
-      font-size: 1.5em;
-      margin-bottom: 15px;
-      color: #444;
-    }
-
-    .hourly-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 15px;
-    }
-
-    .hour-card {
-      background: #fff;
+      background: #ffffff;
       border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 15px;
+      width: 150px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      cursor: pointer;
       transition: transform 0.2s;
     }
 
-    .hour-card:hover {
+    .day-block:hover {
       transform: scale(1.05);
+      background-color: #e0f2f1;
     }
 
-    /* Soare special */
-    .sun-icon {
-      font-size: 40px;
-      color: #f9c74f;
-      display: block;
-      margin-bottom: 5px;
-      animation: rotate 10s linear infinite;
+    .hourly-details {
+      margin-top: 30px;
     }
 
-    /* Lună icon */
-    .moon-icon {
-      font-size: 40px;
-      color: #f3f3f3;
-      display: block;
-      margin-bottom: 5px;
+    .hour-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
     }
 
-    /* Stea icon */
-    .star-icon {
-      font-size: 40px;
-      color: #ffcc00;
-      display: block;
-      margin-bottom: 5px;
+    .hour-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      text-align: center;
     }
 
-    /* Animație soare */
-    @keyframes rotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Responsivitate pentru telefoane */
     @media (max-width: 600px) {
-      .hour-card {
-        font-size: 14px;
-      }
-      h1 {
-        font-size: 2em;
+      .day-block {
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>☀️ Vremea în Pașcani</h1>
-    <p>Prognoză detaliată pe 5 zile (actualizată automat)</p>
-  </header>
-
+  <h1>🌤️ Vremea în Pașcani</h1>
   <div class="days-container" id="weather">Se încarcă...</div>
+  <div class="hourly-details" id="dayDetail"></div>
 
   <script>
     const API_KEY = "d80538f843msh4a2aa2658cf11dbp13ac68jsnb66a616cff22";
     const url = "https://weatherapi-com.p.rapidapi.com/forecast.json?q=Pascani,Iasi,RO&days=5";
 
-    // Maparea condițiilor meteo în engleză la română
-    const weatherTranslations = {
-      "Sunny": "Senin",
-      "Clear": "Senin",
-      "Partly cloudy": "Parțial înnorat",
-      "Cloudy": "Înourat",
-      "Overcast": "Înourat",
-      "Rain": "Ploaie",
-      "Showers": "Averse",
-      "Thunderstorms": "Furtuni",
-      "Snow": "Zăpadă",
-      "Mist": "Cețos",
-      "Fog": "Ceață",
-      "Windy": "Vântos",
-      "Drizzle": "Burniță"
+    const translations = {
+      "Sunny": "Senin", "Clear": "Senin", "Partly cloudy": "Parțial înnorat", "Cloudy": "Înnorat",
+      "Overcast": "Înnorat", "Rain": "Ploaie", "Showers": "Averse", "Thunderstorms": "Furtună",
+      "Snow": "Ninsoare", "Mist": "Ceață", "Fog": "Ceață", "Windy": "Vânt", "Drizzle": "Burniță"
     };
+
+    let forecastData = [];
 
     fetch(url, {
       method: "GET",
@@ -144,78 +91,47 @@
         "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
       }
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
+      forecastData = data.forecast.forecastday;
       const container = document.getElementById('weather');
       container.innerHTML = "";
 
-      const forecastDays = data.forecast.forecastday;
-
-      forecastDays.forEach(day => {
-        const date = day.date;
-        const hours = day.hour;
-        const dayBlock = document.createElement("div");
-        dayBlock.classList.add("day-block");
-
-        const dayTitle = document.createElement("div");
-        dayTitle.classList.add("day-title");
-        dayTitle.textContent = ${date};
-        dayBlock.appendChild(dayTitle);
-
-        const hourlyCards = document.createElement("div");
-        hourlyCards.classList.add("hourly-cards");
-
-        hours.forEach(hour => {
-          const time = hour.time.split(" ")[1];
-          const temp = hour.temp_c;
-          let condition = hour.condition.text;
-          const wind = hour.wind_kph;
-
-          // Traducem condițiile meteo în limba română
-          condition = weatherTranslations[condition] || condition; // Dacă nu există traducere, lăsăm în engleză
-
-          // Verificăm ora pentru a schimba icoana soarelui/lunii
-          const hourValue = parseInt(time.split(":")[0]);
-          const isDaytime = hourValue >= 6 && hourValue <= 18; // Soare doar între 6:00 și 18:00
-          const isClearNight = !hour.condition.text.includes("noros"); // Dacă nu este noros, afisează o stea
-
-          const card = document.createElement("div");
-          card.classList.add("hour-card");
-
-          let icon = '';
-
-          if (isDaytime) {
-            if (condition.includes("Senin")) {
-              icon = '<div class="sun-icon">🌞</div>';  // Soare special
-            } else {
-              icon = '<div class="sun-icon">☀️</div>';  // Soare normal
-            }
-          } else {
-            if (isClearNight) {
-              icon = '<div class="star-icon">⭐</div>'; // Stea
-            } else {
-              icon = '<div class="moon-icon">🌙</div>'; // Lună
-            }
-          }
-          
-          card.innerHTML = 
-            ${icon}
-            <strong>${time}</strong>
-            <p>${condition}</p>
-            <p>🌡️ ${temp}°C</p>
-            <p>💨 ${wind} km/h</p>
-          ;
-          hourlyCards.appendChild(card);
-        });
-
-        dayBlock.appendChild(hourlyCards);
-        container.appendChild(dayBlock);
+      forecastData.forEach((day, index) => {
+        const div = document.createElement("div");
+        div.className = "day-block";
+        div.innerHTML = `
+          <strong>${day.date}</strong><br/>
+          ${translations[day.day.condition.text] || day.day.condition.text}<br/>
+          🌡️ ${day.day.mintemp_c}°C - ${day.day.maxtemp_c}°C
+        `;
+        div.addEventListener("click", () => showDayDetail(index));
+        container.appendChild(div);
       });
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById('weather').innerText = "Eroare la încărcarea datelor meteo.";
     });
+
+    function showDayDetail(index) {
+      const detail = document.getElementById("dayDetail");
+      const day = forecastData[index];
+
+      let html = `<h2>Detalii ${day.date}</h2><div class="hour-grid">`;
+
+      day.hour.forEach(hour => {
+        const time = hour.time.split(" ")[1];
+        const condition = translations[hour.condition.text] || hour.condition.text;
+        html += `
+          <div class="hour-card">
+            <strong>${time}</strong><br/>
+            ${condition}<br/>
+            🌡️ ${hour.temp_c}°C<br/>
+            💨 ${hour.wind_kph} km/h
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      detail.innerHTML = html;
+    }
   </script>
 </body>
 </html>
