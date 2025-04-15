@@ -3,50 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>☀️ Vremea în Pașcani</title>
+  <title>Vremea în Pașcani - Detaliat</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(to right, #fceabb, #f8b500);
+      background: linear-gradient(to right, #e0c3fc, #8ec5fc);
       margin: 0;
       padding: 0;
-      text-align: center;
       color: #333;
     }
 
-    h1 {
-      margin-top: 30px;
-      font-size: 2.5em;
+    header {
+      text-align: center;
+      padding: 30px 15px 10px;
       color: #fff;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+      text-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    #weather {
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .days-container {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 20px;
-      padding-bottom: 40px;
+      flex-direction: column;
+      gap: 40px;
+      padding: 0 20px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    .weather-day {
-      background: #ffffffdd;
+    .day-block {
+      background: #ffffffcc;
       border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      margin: 15px;
       padding: 20px;
-      width: 250px;
-      transition: transform 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    .weather-day:hover {
+    .day-title {
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      color: #444;
+    }
+
+    .hourly-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .hour-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .hour-card:hover {
       transform: scale(1.05);
     }
 
-    .icon {
-      font-size: 60px;
-      animation: rotate 6s linear infinite;
+    .sun-icon {
+      font-size: 30px;
+      color: #f9c74f;
+      display: block;
+      margin-bottom: 5px;
+      animation: rotate 10s linear infinite;
     }
 
     @keyframes rotate {
@@ -55,15 +80,19 @@
     }
 
     @media (max-width: 600px) {
-      .weather-day {
-        width: 80%;
+      .hour-card {
+        font-size: 14px;
       }
     }
   </style>
 </head>
 <body>
-  <h1>☀️ Prognoza meteo Pașcani</h1>
-  <div id="weather">Se încarcă...</div>
+  <header>
+    <h1>☀️ Vremea în Pașcani</h1>
+    <p>Prognoză detaliată pe 5 zile (actualizată automat)</p>
+  </header>
+
+  <div class="days-container" id="weather">Se încarcă...</div>
 
   <script>
     const API_KEY = "d80538f843msh4a2aa2658cf11dbp13ac68jsnb66a616cff22";
@@ -78,32 +107,50 @@
     })
     .then(response => response.json())
     .then(data => {
-      const forecast = data.forecast.forecastday;
       const container = document.getElementById('weather');
       container.innerHTML = "";
 
-      forecast.forEach(day => {
-        const date = day.date;
-        const condition = day.day.condition.text;
-        const maxTemp = day.day.maxtemp_c;
-        const minTemp = day.day.mintemp_c;
-        const wind = day.day.maxwind_kph;
+      const forecastDays = data.forecast.forecastday;
 
-        const html = `
-          <div class="weather-day">
-            <div class="icon">☀️</div>
-            <h3>${date}</h3>
-            <p><strong>${condition}</strong></p>
-            <p>🌡️ ${minTemp}°C - ${maxTemp}°C</p>
-            <p>💨 Vânt: ${wind} km/h</p>
-          </div>
-        `;
-        container.innerHTML += html;
+      forecastDays.forEach(day => {
+        const date = day.date;
+        const hours = day.hour;
+        const dayBlock = document.createElement("div");
+        dayBlock.classList.add("day-block");
+
+        const dayTitle = document.createElement("div");
+        dayTitle.classList.add("day-title");
+        dayTitle.textContent = `${date}`;
+        dayBlock.appendChild(dayTitle);
+
+        const hourlyCards = document.createElement("div");
+        hourlyCards.classList.add("hourly-cards");
+
+        hours.forEach(hour => {
+          const time = hour.time.split(" ")[1];
+          const temp = hour.temp_c;
+          const condition = hour.condition.text;
+          const wind = hour.wind_kph;
+
+          const card = document.createElement("div");
+          card.classList.add("hour-card");
+          card.innerHTML = `
+            <div class="sun-icon">☀️</div>
+            <strong>${time}</strong>
+            <p>${condition}</p>
+            <p>🌡️ ${temp}°C</p>
+            <p>💨 ${wind} km/h</p>
+          `;
+          hourlyCards.appendChild(card);
+        });
+
+        dayBlock.appendChild(hourlyCards);
+        container.appendChild(dayBlock);
       });
     })
     .catch(err => {
       console.error(err);
-      document.getElementById('weather').innerText = "Oops, nu s-au putut încărca datele.";
+      document.getElementById('weather').innerText = "Eroare la încărcarea datelor meteo.";
     });
   </script>
 </body>
