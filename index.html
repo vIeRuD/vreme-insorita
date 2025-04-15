@@ -66,7 +66,7 @@
       transform: scale(1.05);
     }
 
-    /* Soare cu ochelari de soare */
+    /* Soare special */
     .sun-icon {
       font-size: 40px;
       color: #f9c74f;
@@ -106,30 +106,12 @@
         font-size: 2em;
       }
     }
-
-    /* Stil pentru dropdown */
-    .day-select {
-      font-size: 1.2em;
-      padding: 10px;
-      margin: 20px 0;
-      width: 200px;
-      border-radius: 8px;
-      border: none;
-      background-color: #fff;
-      color: #333;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
   <header>
     <h1>☀️ Vremea în Pașcani</h1>
     <p>Prognoză detaliată pe 5 zile (actualizată automat)</p>
-    <!-- Selector de zile -->
-    <select class="day-select" id="daySelect">
-      <option value="0">Alege o zi</option>
-    </select>
   </header>
 
   <div class="days-container" id="weather">Se încarcă...</div>
@@ -169,18 +151,7 @@
 
       const forecastDays = data.forecast.forecastday;
 
-      // Populăm selectorul de zile
-      const daySelect = document.getElementById('daySelect');
-      forecastDays.forEach((day, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = day.date;
-        daySelect.appendChild(option);
-      });
-
-      // Functie pentru a actualiza prognoza pe baza zilei alese
-      function updateForecast(dayIndex) {
-        const day = forecastDays[dayIndex];
+      forecastDays.forEach(day => {
         const date = day.date;
         const hours = day.hour;
         const dayBlock = document.createElement("div");
@@ -188,7 +159,7 @@
 
         const dayTitle = document.createElement("div");
         dayTitle.classList.add("day-title");
-        dayTitle.textContent = `${date}`;
+        dayTitle.textContent = ${date};
         dayBlock.appendChild(dayTitle);
 
         const hourlyCards = document.createElement("div");
@@ -215,7 +186,7 @@
 
           if (isDaytime) {
             if (condition.includes("Senin")) {
-              icon = '<div class="sun-icon">😎</div>';  // Soare cu ochelari de soare
+              icon = '<div class="sun-icon">🌞</div>';  // Soare special
             } else {
               icon = '<div class="sun-icon">☀️</div>';  // Soare normal
             }
@@ -227,6 +198,24 @@
             }
           }
           
-          card.innerHTML = `
+          card.innerHTML = 
             ${icon}
-            
+            <strong>${time}</strong>
+            <p>${condition}</p>
+            <p>🌡️ ${temp}°C</p>
+            <p>💨 ${wind} km/h</p>
+          ;
+          hourlyCards.appendChild(card);
+        });
+
+        dayBlock.appendChild(hourlyCards);
+        container.appendChild(dayBlock);
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('weather').innerText = "Eroare la încărcarea datelor meteo.";
+    });
+  </script>
+</body>
+</html>
