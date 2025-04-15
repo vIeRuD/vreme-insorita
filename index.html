@@ -1,74 +1,110 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vremea în Pașcani</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #fdf6e3;
-            text-align: center;
-            padding: 30px;
-        }
-        .weather-day {
-            border: 1px solid #ccc;
-            margin: 10px auto;
-            padding: 15px;
-            max-width: 400px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-        .icon {
-            font-size: 50px;
-            color: #f5b041; /* galben solar */
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>☀️ Vremea în Pașcani</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #fceabb, #f8b500);
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      color: #333;
+    }
+
+    h1 {
+      margin-top: 30px;
+      font-size: 2.5em;
+      color: #fff;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+
+    #weather {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+      padding-bottom: 40px;
+    }
+
+    .weather-day {
+      background: #ffffffdd;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin: 15px;
+      padding: 20px;
+      width: 250px;
+      transition: transform 0.3s;
+    }
+
+    .weather-day:hover {
+      transform: scale(1.05);
+    }
+
+    .icon {
+      font-size: 60px;
+      animation: rotate 6s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .weather-day {
+        width: 80%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>Vremea în Pașcani</h1>
-    <div id="weather"></div>
+  <h1>☀️ Prognoza meteo Pașcani</h1>
+  <div id="weather">Se încarcă...</div>
 
-    <script>
-        const API_KEY = "d80538f843msh4a2aa2658cf11dbp13ac68jsnb66a616cff22"; // gratuit de la RapidAPI
-        const url = "https://weatherapi-com.p.rapidapi.com/forecast.json?q=Pascani,Iasi,RO&days=5";
+  <script>
+    const API_KEY = "d80538f843msh4a2aa2658cf11dbp13ac68jsnb66a616cff22";
+    const url = "https://weatherapi-com.p.rapidapi.com/forecast.json?q=Pascani,Iasi,RO&days=5";
 
-        fetch(url, {
-            method: "GET",
-            headers: {
-                "X-RapidAPI-Key": API_KEY,
-                "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const forecast = data.forecast.forecastday;
-            const container = document.getElementById('weather');
+    fetch(url, {
+      method: "GET",
+      headers: {
+        "X-RapidAPI-Key": API_KEY,
+        "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      const forecast = data.forecast.forecastday;
+      const container = document.getElementById('weather');
+      container.innerHTML = "";
 
-            forecast.forEach(day => {
-                const date = day.date;
-                const condition = day.day.condition.text;
-                const maxTemp = day.day.maxtemp_c;
-                const minTemp = day.day.mintemp_c;
-                const wind = day.day.maxwind_kph;
+      forecast.forEach(day => {
+        const date = day.date;
+        const condition = day.day.condition.text;
+        const maxTemp = day.day.maxtemp_c;
+        const minTemp = day.day.mintemp_c;
+        const wind = day.day.maxwind_kph;
 
-                const html = `
-                    <div class="weather-day">
-                        <div class="icon">☀️</div>
-                        <h3>${date}</h3>
-                        <p><strong>${condition}</strong></p>
-                        <p>Temperaturi: ${minTemp}°C - ${maxTemp}°C</p>
-                        <p>Vânt: ${wind} km/h</p>
-                    </div>
-                `;
-                container.innerHTML += html;
-            });
-        })
-        .catch(err => {
-            console.error(err);
-            document.getElementById('weather').innerText = "Nu s-au putut încărca datele.";
-        });
-    </script>
+        const html = `
+          <div class="weather-day">
+            <div class="icon">☀️</div>
+            <h3>${date}</h3>
+            <p><strong>${condition}</strong></p>
+            <p>🌡️ ${minTemp}°C - ${maxTemp}°C</p>
+            <p>💨 Vânt: ${wind} km/h</p>
+          </div>
+        `;
+        container.innerHTML += html;
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('weather').innerText = "Oops, nu s-au putut încărca datele.";
+    });
+  </script>
 </body>
 </html>
