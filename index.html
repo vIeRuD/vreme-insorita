@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vremea în Pașcani - Prognoză 5 zile</title>
+  <title>Vremea în Pașcani - Detaliat</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
@@ -26,20 +26,47 @@
       margin-bottom: 10px;
     }
 
-    .days-container {
+    .summary-container {
       display: flex;
-      flex-direction: column;
-      gap: 30px;
+      overflow-x: auto;
+      gap: 15px;
+      padding: 15px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .summary-card {
+      flex: 0 0 auto;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.2s;
+      min-width: 150px;
+    }
+
+    .summary-card:hover {
+      transform: scale(1.05);
+    }
+
+    .active-day {
+      border: 2px solid #555;
+    }
+
+    .days-container {
       padding: 0 20px 40px;
       max-width: 1200px;
       margin: 0 auto;
     }
 
     .day-block {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.8);
       border-radius: 15px;
       padding: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-top: 20px;
     }
 
     .day-title {
@@ -60,7 +87,6 @@
       padding: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       transition: transform 0.2s;
-      text-align: center;
     }
 
     .hour-card:hover {
@@ -69,13 +95,21 @@
 
     .sun-icon {
       font-size: 40px;
+      color: #f9c74f;
       display: block;
       margin-bottom: 5px;
       animation: rotate 10s linear infinite;
     }
 
-    .moon-icon, .star-icon {
+    .moon-cloud-icon {
       font-size: 40px;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .star-icon {
+      font-size: 40px;
+      color: #ffcc00;
       display: block;
       margin-bottom: 5px;
     }
@@ -98,10 +132,11 @@
 <body>
   <header>
     <h1>☀️ Vremea în Pașcani</h1>
-    <p>Prognoză detaliată pe 5 zile (actualizat automat)</p>
+    <p>Prognoză detaliată pe 5 zile (actualizată automat)</p>
   </header>
 
-  <div class="days-container" id="weather">Se încarcă...</div>
+  <div class="summary-container" id="day-summary">Se încarcă...</div>
+  <div class="days-container" id="weather-detail"></div>
 
   <script>
     const API_KEY = "d80538f843msh4a2aa2658cf11dbp13ac68jsnb66a616cff22";
@@ -111,8 +146,8 @@
       "Sunny": "Senin",
       "Clear": "Senin",
       "Partly cloudy": "Parțial înnorat",
-      "Cloudy": "Înnorat",
-      "Overcast": "Înnorat",
+      "Cloudy": "Înnourat",
+      "Overcast": "Înnourat",
       "Rain": "Ploaie",
       "Showers": "Averse",
       "Thunderstorms": "Furtuni",
@@ -123,6 +158,8 @@
       "Drizzle": "Burniță"
     };
 
+    let forecastDays = [];
+
     fetch(url, {
       method: "GET",
       headers: {
@@ -130,75 +167,113 @@
         "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
       }
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-      const container = document.getElementById('weather');
-      container.innerHTML = "";
-
-      const forecastDays = data.forecast.forecastday;
-
-      forecastDays.forEach(day => {
-        const date = day.date;
-        const hours = day.hour;
-        const dayBlock = document.createElement("div");
-        dayBlock.classList.add("day-block");
-
-        const dayTitle = document.createElement("div");
-        dayTitle.classList.add("day-title");
-        dayTitle.textContent = `📅 ${date}`;
-        dayBlock.appendChild(dayTitle);
-
-        const hourlyCards = document.createElement("div");
-        hourlyCards.classList.add("hourly-cards");
-
-        hours.forEach(hour => {
-          const time = hour.time.split(" ")[1];
-          const temp = hour.temp_c;
-          let condition = hour.condition.text;
-          const wind = hour.wind_kph;
-
-          condition = weatherTranslations[condition] || condition;
-
-          const hourValue = parseInt(time.split(":")[0]);
-          const isDaytime = hourValue >= 6 && hourValue <= 18;
-          const isClearNight = condition.includes("Senin");
-
-          let icon = '';
-
-          if (isDaytime) {
-            if (condition.includes("Senin")) {
-              icon = '<div class="sun-icon">🌞</div>'; // Soare animat
-            } else {
-              icon = '<div class="sun-icon">☀️</div>'; // Soare normal
-            }
-          } else {
-            if (isClearNight) {
-              icon = '<div class="star-icon">⭐</div>'; // Noapte senină
-            } else {
-              icon = '<div class="moon-icon">🌜☁️</div>'; // Lună cu nori
-            }
-          }
-
-          const card = document.createElement("div");
-          card.classList.add("hour-card");
-          card.innerHTML = `
-            ${icon}
-            <strong>${time}</strong>
-            <p>${condition}</p>
-            <p>🌡️ ${temp}°C</p>
-            <p>💨 ${wind} km/h</p>
-          `;
-          hourlyCards.appendChild(card);
-        });
-
-        dayBlock.appendChild(hourlyCards);
-        container.appendChild(dayBlock);
-      });
+      forecastDays = data.forecast.forecastday;
+      renderDaySummaries();
+      renderDayDetail(0);
     })
     .catch(err => {
       console.error(err);
-      document.getElementById('weather').innerText = "Eroare la încărcarea datelor meteo.";
+      document.getElementById('day-summary').innerText = "Eroare la încărcarea datelor.";
     });
+
+    function renderDaySummaries() {
+      const container = document.getElementById('day-summary');
+      container.innerHTML = "";
+
+      forecastDays.forEach((day, index) => {
+        const avgTemp = day.day.avgtemp_c;
+        const condition = weatherTranslations[day.day.condition.text] || day.day.condition.text;
+        const date = day.date;
+
+        const summary = document.createElement("div");
+        summary.classList.add("summary-card");
+        if (index === 0) summary.classList.add("active-day");
+
+        const icon = getIcon(condition, true, index);
+
+        summary.innerHTML = `
+          ${icon}
+          <strong>${date}</strong>
+          <p>${condition}</p>
+          <p>🌡️ ${avgTemp}°C</p>
+        `;
+
+        summary.onclick = () => {
+          document.querySelectorAll(".summary-card").forEach(c => c.classList.remove("active-day"));
+          summary.classList.add("active-day");
+          renderDayDetail(index);
+        };
+
+        container.appendChild(summary);
+      });
+    }
+
+    function renderDayDetail(index) {
+      const container = document.getElementById("weather-detail");
+      container.innerHTML = "";
+
+      const day = forecastDays[index];
+      const block = document.createElement("div");
+      block.classList.add("day-block");
+
+      const title = document.createElement("div");
+      title.classList.add("day-title");
+      title.textContent = day.date;
+      block.appendChild(title);
+
+      const hourlyCards = document.createElement("div");
+      hourlyCards.classList.add("hourly-cards");
+
+      day.hour.forEach(hour => {
+        const time = hour.time.split(" ")[1];
+        const hourValue = parseInt(time.split(":")[0]);
+        const isDaytime = hourValue >= 6 && hourValue <= 18;
+        const conditionText = weatherTranslations[hour.condition.text] || hour.condition.text;
+        const wind = hour.wind_kph;
+        const temp = hour.temp_c;
+
+        const isClearNight = hour.condition.text === "Clear" || hour.condition.text === "Sunny";
+        const card = document.createElement("div");
+        card.classList.add("hour-card");
+
+        let icon = "";
+
+        if (isDaytime) {
+          if (conditionText.includes("Senin")) {
+            icon = `<div class="sun-icon">🌞</div>`;
+          } else {
+            icon = `<div class="sun-icon">☀️</div>`;
+          }
+        } else {
+          if (isClearNight) {
+            icon = `<div class="star-icon">⭐</div>`;
+          } else {
+            icon = `<div class="moon-cloud-icon">🌙☁️</div>`;
+          }
+        }
+
+        card.innerHTML = `
+          ${icon}
+          <strong>${time}</strong>
+          <p>${conditionText}</p>
+          <p>🌡️ ${temp}°C</p>
+          <p>💨 ${wind} km/h</p>
+        `;
+
+        hourlyCards.appendChild(card);
+      });
+
+      block.appendChild(hourlyCards);
+      container.appendChild(block);
+    }
+
+    function getIcon(condition, isDay, index) {
+      if (isDay && condition.includes("Senin")) return `<div class="sun-icon">🌞</div>`;
+      if (isDay) return `<div class="sun-icon">☀️</div>`;
+      return `<div class="moon-cloud-icon">🌙☁️</div>`;
+    }
   </script>
 </body>
 </html>
