@@ -29,14 +29,14 @@
     .days-container {
       display: flex;
       flex-direction: column;
-      gap: 40px;
+      gap: 30px;
       padding: 0 20px 40px;
       max-width: 1200px;
       margin: 0 auto;
     }
 
     .day-block {
-      background: #ffffffcc;
+      background: rgba(255, 255, 255, 0.8);
       border-radius: 15px;
       padding: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -66,22 +66,44 @@
       transform: scale(1.05);
     }
 
+    /* Soare special */
     .sun-icon {
-      font-size: 30px;
+      font-size: 40px;
       color: #f9c74f;
       display: block;
       margin-bottom: 5px;
       animation: rotate 10s linear infinite;
     }
 
+    /* Lună icon */
+    .moon-icon {
+      font-size: 40px;
+      color: #f3f3f3;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    /* Stea icon */
+    .star-icon {
+      font-size: 40px;
+      color: #ffcc00;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    /* Animație soare */
     @keyframes rotate {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
 
+    /* Responsivitate pentru telefoane */
     @media (max-width: 600px) {
       .hour-card {
         font-size: 14px;
+      }
+      h1 {
+        font-size: 2em;
       }
     }
   </style>
@@ -97,6 +119,23 @@
   <script>
     const API_KEY = "d80538f843msh4a2aa2658cf11dbp13ac68jsnb66a616cff22";
     const url = "https://weatherapi-com.p.rapidapi.com/forecast.json?q=Pascani,Iasi,RO&days=5";
+
+    // Maparea condițiilor meteo în engleză la română
+    const weatherTranslations = {
+      "Sunny": "Senin",
+      "Clear": "Senin",
+      "Partly cloudy": "Parțial înnorat",
+      "Cloudy": "Înourat",
+      "Overcast": "Înourat",
+      "Rain": "Ploaie",
+      "Showers": "Averse",
+      "Thunderstorms": "Furtuni",
+      "Snow": "Zăpadă",
+      "Mist": "Cețos",
+      "Fog": "Ceață",
+      "Windy": "Vântos",
+      "Drizzle": "Burniță"
+    };
 
     fetch(url, {
       method: "GET",
@@ -129,13 +168,38 @@
         hours.forEach(hour => {
           const time = hour.time.split(" ")[1];
           const temp = hour.temp_c;
-          const condition = hour.condition.text;
+          let condition = hour.condition.text;
           const wind = hour.wind_kph;
+
+          // Traducem condițiile meteo în limba română
+          condition = weatherTranslations[condition] || condition; // Dacă nu există traducere, lăsăm în engleză
+
+          // Verificăm ora pentru a schimba icoana soarelui/lunii
+          const hourValue = parseInt(time.split(":")[0]);
+          const isDaytime = hourValue >= 6 && hourValue <= 18; // Soare doar între 6:00 și 18:00
+          const isClearNight = !hour.condition.text.includes("noros"); // Dacă nu este noros, afisează o stea
 
           const card = document.createElement("div");
           card.classList.add("hour-card");
+
+          let icon = '';
+
+          if (isDaytime) {
+            if (condition.includes("Senin")) {
+              icon = '<div class="sun-icon">🌞</div>';  // Soare special
+            } else {
+              icon = '<div class="sun-icon">☀️</div>';  // Soare normal
+            }
+          } else {
+            if (isClearNight) {
+              icon = '<div class="star-icon">⭐</div>'; // Stea
+            } else {
+              icon = '<div class="moon-icon">🌙</div>'; // Lună
+            }
+          }
+          
           card.innerHTML = `
-            <div class="sun-icon">☀️</div>
+            ${icon}
             <strong>${time}</strong>
             <p>${condition}</p>
             <p>🌡️ ${temp}°C</p>
