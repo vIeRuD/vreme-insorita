@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vremea în Pașcani</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fdf6e3;
+            text-align: center;
+            padding: 30px;
+        }
+        .weather-day {
+            border: 1px solid #ccc;
+            margin: 10px auto;
+            padding: 15px;
+            max-width: 400px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .icon {
+            font-size: 50px;
+            color: #f5b041; /* galben solar */
+        }
+    </style>
+</head>
+<body>
+    <h1>Vremea în Pașcani</h1>
+    <div id="weather"></div>
+
+    <script>
+        const API_KEY = "d80538f843msh4a2aa2658cf11dbp13ac68jsnb66a616cff22"; // gratuit de la RapidAPI
+        const url = "https://weatherapi-com.p.rapidapi.com/forecast.json?q=Pascani,Iasi,RO&days=5";
+
+        fetch(url, {
+            method: "GET",
+            headers: {
+                "X-RapidAPI-Key": API_KEY,
+                "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const forecast = data.forecast.forecastday;
+            const container = document.getElementById('weather');
+
+            forecast.forEach(day => {
+                const date = day.date;
+                const condition = day.day.condition.text;
+                const maxTemp = day.day.maxtemp_c;
+                const minTemp = day.day.mintemp_c;
+                const wind = day.day.maxwind_kph;
+
+                const html = `
+                    <div class="weather-day">
+                        <div class="icon">☀️</div>
+                        <h3>${date}</h3>
+                        <p><strong>${condition}</strong></p>
+                        <p>Temperaturi: ${minTemp}°C - ${maxTemp}°C</p>
+                        <p>Vânt: ${wind} km/h</p>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('weather').innerText = "Nu s-au putut încărca datele.";
+        });
+    </script>
+</body>
+</html>
